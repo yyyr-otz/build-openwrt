@@ -73,6 +73,7 @@ jobs:
     - name: 导入额外feeds-argon
       working-directory: ./openwrt/package
       run: |
+        rm luci-theme-argon -rf
         git clone https://github.com/jerrykuku/luci-theme-argon.git
         
     - name: 配置自定义-Build_OP_HC5861
