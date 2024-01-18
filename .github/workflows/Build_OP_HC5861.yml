@@ -71,7 +71,7 @@ jobs:
         ./scripts/feeds install -a
         
     - name: 导入额外feeds-argon
-      working-directory: ./openwrt/pakage
+      working-directory: ./openwrt/package
       run: |
         git clone https://github.com/jerrykuku/luci-theme-argon.git
         
