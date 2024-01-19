@@ -56,11 +56,7 @@ jobs:
       run: |
         git clone -b $REPO_BRANCH --single-branch $REPO_URL openwrt
         cd openwrt
-        echo "src-git istore https://github.com/linkease/istore;main" >> ./feeds.conf.default
-        echo "src-git helloworld https://github.com/fw876/helloworld" >> ./feeds.conf.default
-        echo "src-git kiddin9 https://github.com/kiddin9/openwrt-packages" >> ./feeds.conf.default
-        cd package
-        git clone https://github.com/jerrykuku/luci-theme-argon.git
+        ls
         
     - name: 更新和安装feeds
       working-directory: ./openwrt
@@ -73,7 +69,6 @@ jobs:
     - name: 导入额外feeds-argon
       working-directory: ./openwrt/package
       run: |
-        rm luci-theme-argon -rf
         git clone https://github.com/jerrykuku/luci-theme-argon.git
         
     - name: 配置自定义-Build_OP_HC5861
