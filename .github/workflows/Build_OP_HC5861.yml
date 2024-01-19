@@ -89,6 +89,7 @@ jobs:
     - name: 编译固件
       working-directory: ./openwrt
       run: |
+        sed -i '4i\KBUILD_CFLAGS += -w' Makefile 
         export KBUILD_CFLAGS+=-w
         export FORCE_UNSAFE_CONFIGURE=1
         echo -e "$(nproc) thread build."
