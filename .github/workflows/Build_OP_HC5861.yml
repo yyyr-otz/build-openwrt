@@ -91,7 +91,7 @@ jobs:
       run: |
         export CFLAGS="-Wno-error"
         export CXXFLAGS="-Wno-error"
-        export KBUILD_CFLAGS+=-w
+        export KBUILD_CFLAGS+="-w"
         export FORCE_UNSAFE_CONFIGURE=1
         echo -e "$(nproc) thread build."
         make -j$(($(nproc) + 1)) V=s || make -j1 V=s
