@@ -89,8 +89,8 @@ jobs:
     - name: 编译固件
       working-directory: ./openwrt
       run: |
-        export CFLAGS = Wno-error
-        export CXXFLAGS = Wno-error
+        export CFLAGS = "-Wno-error"
+        export CXXFLAGS = "-Wno-error"
         export KBUILD_CFLAGS += -w
         export FORCE_UNSAFE_CONFIGURE = 1
         echo -e "$(nproc) thread build."
