@@ -1,0 +1,108 @@
+#=================================================
+# Description: Build OpenWrt using GitHub Actions
+# Lisence: MIT
+# Author: eSirPlayground
+# Youtube Channel: https://goo.gl/fvkdwm 
+#=================================================
+
+name: Build_X_HC5861
+
+# Add a button to trigger the workflow
+on: 
+  repository_dispatch:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@master
+
+    - name: 初始化环境
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        set +e
+        docker rmi `docker images -q`
+        echo "Deleting files, please wait ..."
+        sudo rm -rf \
+          /usr/share/dotnet \
+          /etc/mysql \
+          /etc/php
+        sudo -E apt-get -y purge \
+          azure-cli \
+          ghc* \
+          zulu* \
+          hhvm \
+          llvm* \
+          firefox \
+          google* \
+          dotnet* \
+          powershell \
+          openjdk* \
+          mysql* \
+          php*
+        sudo -E apt-get update
+        sudo -E apt-get -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev ecj file g++ gcc-multilib git-core java-propose-classpath python3-dev python3-distutils python3-pyelftools
+        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get clean
+        
+    - name: 拉取源码
+      env: 
+        REPO_URL: https://github.com/x-wrt/x-wrt
+        REPO_BRANCH: master
+      run: |
+        git clone -b $REPO_BRANCH --single-branch $REPO_URL openwrt
+        cd openwrt
+        ls
+        # x-wrt构建专用
+        git fetch origin
+        git fetch origin --tags
+        git checkout -f $(git describe --tags $(git rev-list --tags --max-count=1))
+        ls
+        
+    - name: 更新和安装feeds
+      working-directory: ./openwrt
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        
+    - name: 导入额外feeds-argon
+      working-directory: ./openwrt/package
+      run: |
+        # git clone https://github.com/jerrykuku/luci-theme-argon.git
+
+    - name: 配置自定义-Build_X_HC5861
+      env:
+        CONFIG_FILE: 'xwrt_hc5861.config'
+      run: |
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x ./customize.sh && ./customize.sh
+        cd openwrt && make defconfig
+        
+    - name: 下载软件包
+      working-directory: ./openwrt
+      run: |
+        make download -j$(nproc) V=s
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+        
+    - name: 编译固件
+      working-directory: ./openwrt
+      run: |
+        # sed -i '4i\KBUILD_CFLAGS += -w' Makefile 
+        # export KBUILD_CFLAGS+=-w
+        export FORCE_UNSAFE_CONFIGURE=1
+        echo -e "$(nproc) thread build."
+        # make KBUILD_CFLAGS+=-w -j$(($(nproc) + 1)) V=s || make KBUILD_CFLAGS+=-w -j1 V=s KBUILD_CFLAGS+=-w
+        make -j$(($(nproc) + 1)) V=s || make -j1 V=s
+        
+    - name : 上传工件
+      uses: actions/upload-artifact@master
+      with:
+        name: OpenWrt
+        path: openwrt/bin
